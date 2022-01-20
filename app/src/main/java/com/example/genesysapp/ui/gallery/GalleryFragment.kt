@@ -5,6 +5,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -72,6 +73,13 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.user_menu, menu)
+
+        val searchItem = menu.findItem(R.id.menu_search)
+        val searchView: SearchView = searchItem.actionView as SearchView
+
+        searchView.onQueryTextChanged {
+            viewModule.onFilterUser(it)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -87,5 +95,18 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private inline fun SearchView.onQueryTextChanged(crossinline listener: (String) -> Unit) {
+        this.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                listener(newText.orEmpty())
+                return true
+            }
+        })
     }
 }

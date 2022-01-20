@@ -24,28 +24,41 @@ class GalleryViewModule @Inject constructor(
         onRefresh()
     }
 
-    private lateinit var results : List<RandomUser>
+    private lateinit var results: List<RandomUser>
 
     fun onRefresh() = viewModelScope.launch {
-            val randomUserResponse = repository.getRandomUserList()
-            results = randomUserResponse.results
-            randomUserLiveData.value = results
+        val randomUserResponse = repository.getRandomUserList()
+        results = randomUserResponse.results
+        randomUserLiveData.value = results
 
-            val joinToString = results.groupBy { it.nat }
-                                      .map { "${it.key} ${it.value.size}" }
-                                      .joinToString(separator = "\n")
+        val joinToString = results.groupBy { it.nat }
+            .map { "${it.key}   ${it.value.size}" }
+            .joinToString(separator = "\n")
 
-            eventChannel.send(UserEvent.ShowSummaryMessage(joinToString))
-        }
+        eventChannel.send(UserEvent.ShowSummaryMessage(joinToString))
+    }
 
     fun onUserSort() {
         randomUserLiveData.apply {
             value?.sortedBy { it.name.last }
-                  .also { value = it }
+                .also { value = it }
+        }
+    }
+
+
+    fun onFilterUser(query: String) {
+        randomUserLiveData.value = results
+        randomUserLiveData.apply {
+            value?.filter {
+                it.name.first.toLowerCase().contains(query) or
+                        it.name.last.toLowerCase().contains(query)
+            }?.also {
+                value = it
+            }
         }
     }
 
     sealed class UserEvent {
-        data class ShowSummaryMessage(val msg : String) : UserEvent()
+        data class ShowSummaryMessage(val msg: String) : UserEvent()
     }
 }
